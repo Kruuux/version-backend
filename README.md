@@ -1,1 +1,8 @@
-# version-backend
+# Backend
+
+## Setup
+
+```
+$ docker compose build
+$ docker compose up -d
+```
