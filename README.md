@@ -19,4 +19,4 @@ $ npm test
 $ npm audit
 ```
 
-1
+1, 2
