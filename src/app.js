@@ -2,7 +2,7 @@ require('dotenv').config()
 
 const express = require('express')
 const app = express()
-const port = 3000
+const port = 80
 
 const serverStartTime = Date.now();
 const version = '1.0.0'
