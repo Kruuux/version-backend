@@ -18,3 +18,5 @@ $ npm test
 ```
 $ npm audit
 ```
+
+1, 2
