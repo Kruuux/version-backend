@@ -35,7 +35,7 @@ jobs:
         if: success() # Only run if the previous steps were successful
         run: |
           # Create a new task definition with the updated Docker image version
-          aws ecs register-task-definition --family version-backend-production --container-definitions "$(cat ./ecs/production-task-definition.json)"
+          aws ecs register-task-definition --family version-backend-production --container-definitions "$(cat ../ecs/production-task-definition.json)"
 
       - name: Update ECS Service
         if: success() # Only run if the previous steps were successful
