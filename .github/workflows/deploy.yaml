@@ -30,3 +30,15 @@ jobs:
 
           # Push Docker image to ECR
           docker push 266748940789.dkr.ecr.eu-central-1.amazonaws.com/version-backend-production:latest
+
+      - name: Update ECS Task Definition
+        if: success() # Only run if the previous steps were successful
+        run: |
+          # Create a new task definition with the updated Docker image version
+          aws ecs register-task-definition --family version-backend-production --container-definitions "$(cat ecs-task-definition.json)"
+
+      - name: Update ECS Service
+        if: success() # Only run if the previous steps were successful
+        run: |
+          # Update ECS service to use the new task definition
+          aws ecs update-service --cluster version-backend-production --service version-backend-production --task-definition version-backend-production:latest
