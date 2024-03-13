@@ -1,5 +1,5 @@
 {
-  "family": "version-backend-production",
+  "taskDefinitionArn": "arn:aws:ecs:eu-central-1:266748940789:task-definition/version-backend-production:4",
   "containerDefinitions": [
     {
       "name": "version-backend-production",
@@ -32,9 +32,35 @@
       "systemControls": []
     }
   ],
+  "family": "version-backend-production",
   "taskRoleArn": "arn:aws:iam::266748940789:role/learn-ecs",
   "executionRoleArn": "arn:aws:iam::266748940789:role/learn-ecs",
   "networkMode": "awsvpc",
+  "revision": 4,
+  "volumes": [],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+    {
+      "name": "com.amazonaws.ecs.capability.ecr-auth"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.task-iam-role"
+    },
+    {
+      "name": "ecs.capability.execution-role-ecr-pull"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    },
+    {
+      "name": "ecs.capability.task-eni"
+    }
+  ],
+  "placementConstraints": [],
+  "compatibilities": [
+    "EC2",
+    "FARGATE"
+  ],
   "requiresCompatibilities": [
     "FARGATE"
   ],
@@ -43,5 +69,8 @@
   "runtimePlatform": {
     "cpuArchitecture": "X86_64",
     "operatingSystemFamily": "LINUX"
-  }
+  },
+  "registeredAt": "2024-03-13T11:37:37.535Z",
+  "registeredBy": "arn:aws:iam::266748940789:root",
+  "tags": []
 }
