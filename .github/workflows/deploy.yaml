@@ -12,33 +12,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup AWS CLI
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-central-1
 
-      - name: Build and push Docker image to ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: version-backend-production
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Log in to Amazon ECR
-          aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 266748940789.dkr.ecr.eu-central-1.amazonaws.com
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-          # Build and tag Docker image
-          docker build -t version-backend-production .
-          docker tag version-backend-production:latest 266748940789.dkr.ecr.eu-central-1.amazonaws.com/version-backend-production:latest
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: version-backend-production
+          image: ${{ steps.build-image.outputs.image }}
 
-          # Push Docker image to ECR
-          docker push 266748940789.dkr.ecr.eu-central-1.amazonaws.com/version-backend-production:latest
-
-      - name: Update ECS Task Definition
-        if: success() # Only run if the previous steps were successful
-        run: |
-          # Create a new task definition with the updated Docker image version
-          aws ecs register-task-definition --family version-backend-production --container-definitions "{  "taskDefinitionArn": "arn:aws:ecs:eu-central-1:266748940789:task-definition/version-backend-production:4",  "containerDefinitions": [    {      "name": "version-backend-production",      "image": "266748940789.dkr.ecr.eu-central-1.amazonaws.com/version-backend-production:latest",      "cpu": 0,      "portMappings": [        {          "name": "version-backend-production-80-tcp",          "containerPort": 80,          "hostPort": 80,          "protocol": "tcp",          "appProtocol": "http"        }      ],      "essential": true,      "environment": [        {          "name": "VERSION",          "value": "1.0.0"        },        {          "name": "ENVIRONMENT",          "value": "production"        }      ],      "environmentFiles": [],      "mountPoints": [],      "volumesFrom": [],      "ulimits": [],      "systemControls": []    }  ],  "family": "version-backend-production",  "taskRoleArn": "arn:aws:iam::266748940789:role/learn-ecs",  "executionRoleArn": "arn:aws:iam::266748940789:role/learn-ecs",  "networkMode": "awsvpc",  "revision": 4,  "volumes": [],  "status": "ACTIVE",  "requiresAttributes": [    {      "name": "com.amazonaws.ecs.capability.ecr-auth"    },    {      "name": "com.amazonaws.ecs.capability.task-iam-role"    },    {      "name": "ecs.capability.execution-role-ecr-pull"    },    {      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"    },    {      "name": "ecs.capability.task-eni"    }  ],  "placementConstraints": [],  "compatibilities": [    "EC2",    "FARGATE"  ],  "requiresCompatibilities": [    "FARGATE"  ],  "cpu": "256",  "memory": "512",  "runtimePlatform": {    "cpuArchitecture": "X86_64",    "operatingSystemFamily": "LINUX"  },  "registeredAt": "2024-03-13T11:37:37.535Z",  "registeredBy": "arn:aws:iam::266748940789:root",  "tags": []}"
-
-      - name: Update ECS Service
-        if: success() # Only run if the previous steps were successful
-        run: |
-          # Update ECS service to use the new task definition
-          aws ecs update-service --cluster version-backend-production --service version-backend-production --task-definition version-backend-production:latest
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: version-backend-production
+          cluster: version-backend-production
+          wait-for-service-stability: true
