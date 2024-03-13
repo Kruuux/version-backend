@@ -22,11 +22,11 @@ jobs:
       - name: Build and push Docker image to ECR
         run: |
           # Log in to Amazon ECR
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/s3f1r6q9
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin 266748940789.dkr.ecr.eu-central-1.amazonaws.com
 
           # Build and tag Docker image
           docker build -t version-backend-production .
-          docker tag version-backend-production:latest public.ecr.aws/s3f1r6q9/version-backend-production:latest
+          docker tag version-backend-production:latest 266748940789.dkr.ecr.eu-central-1.amazonaws.com/version-backend-production:latest
 
           # Push Docker image to ECR
-          docker push public.ecr.aws/s3f1r6q9/version-backend-production:latest
+          docker push 266748940789.dkr.ecr.eu-central-1.amazonaws.com/version-backend-production:latest
